@@ -104,6 +104,17 @@
             }
         }
 
+        .v-input-date-picker {
+            input{
+                opacity : 1;
+                background : #fff !important;
+                &:focus{
+                    border-color: #5db0ff;
+                    box-shadow: 0 0 0 0.125rem rgba(52,142,227,.3);
+                }
+            }
+        }
+
         .time-picker {
             &>input.display-time {
                 border: 1px solid #d3d8de;
@@ -343,7 +354,7 @@
         extends : components.simple,
         template : simple_template(`
         <select ${directives}>
-            <option v-if="attrs.required" value="" disabled>--- {{attrs.placeholder}} ---</option>
+            <option v-if="attrs.showPlaceholder" value="" disabled>--- {{attrs.placeholder}} ---</option>
             <slot></slot>
         </select>
         `)
@@ -359,7 +370,7 @@
             let config = {
                 width : "100%"
             };
-            if (this.attrs.required){
+            if (this.attrs.showPlaceholder){
                 config.placeholder = `--- ${this.attrs.placeholder} ---`;
             }
 
@@ -469,12 +480,13 @@
         computed : {
             inputGroupClass(){
                 let cls = base.computed.inputGroupClass.apply(this);
-                cls["input-group date"] = true;
+                cls["input-group date v-input-date-picker"] = true;
                 return cls;
             }
         },
         template : base_template(`
-            <input v-bind="attrs" :class="formControlClass" v-validate="validate" :data-vv-as="printName" readonly>
+            <input v-bind="attrs" :class="formControlClass" readonly>
+            <input v-model="edit" v-bind="attrs" v-validate="validate" :data-vv-as="printName" class="d-none">
             <div  class="input-group-addon">
                 <i class="far fa-calendar-alt cursor-pointer"></i>
             </div>
@@ -523,7 +535,7 @@
         computed : {
             inputGroupClass(){
                 let cls = base.computed.inputGroupClass.apply(this);
-                cls["input-group input-daterange"] = true;
+                cls["input-group input-daterange v-input-date-picker"] = true;
                 return cls;
             }
         },
@@ -759,6 +771,7 @@
             let attrs = context.data.attrs || {};
             attrs.type = context.props.type;
             attrs = _.merge({},attrs,{
+                showPlaceholder : attrs.placeholder != null || attrs.required || attrs.required === "",
                 placeholder : attrs.placeholder ? attrs.placeholder : attrs.label,
                 name : ((a)=>{
                     let name;

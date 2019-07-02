@@ -1,5 +1,12 @@
 <style lang="less">
     .v-input {
+        .v-input-group>select[data-value='']{
+            color : #999;
+            &>option {
+                color : initial
+            }
+        }
+
         .select2.select2-container{
             max-width : 100%;
         }
@@ -86,7 +93,11 @@
             }
         }
 
-        .select2 {
+        .select2  {
+            .select2-selection__clear{
+                font-size: 1.4em!important;
+            }
+
             .select2-selection--multiple .select2-selection__rendered li.select2-selection__choice{
                 background-color: #348fe2!important;
                 color: #fff;
@@ -190,7 +201,7 @@
         <div v-if="label" :class="inline ? 'col-3 d-flex align-items-center' : ''">
             <label :class="inline ? 'mb-0' : ''">{{labelContent}}</label>
         </div>
-        <div ref="inputGroup" :class="inputGroupClass">
+        <div ref="inputGroup" :class="inputGroupClass" class="v-input-group">
             ${t}
             <div class="invalid-feedback">{{error}}</div>
         </div>
@@ -353,7 +364,7 @@
         },
         extends : components.simple,
         template : simple_template(`
-        <select ${directives}>
+        <select ${directives} :data-value="value">
             <option v-if="attrs.showPlaceholder" value="" disabled>--- {{attrs.placeholder}} ---</option>
             <slot></slot>
         </select>
@@ -368,7 +379,8 @@
         },
         mounted(){
             let config = {
-                width : "100%"
+                width : "100%",
+                allowClear : this.attrs.multiple == null
             };
             if (this.attrs.showPlaceholder){
                 config.placeholder = `--- ${this.attrs.placeholder} ---`;
@@ -403,7 +415,9 @@
                 .on("select2:unselect",e=>{
                     if (this.attrs.multiple != null){
                         this.edit = _.without(this.edit,e.params.data.id);
-                    } 
+                    } else {
+                        this.edit = "";
+                    }
                 });
                 this.observer = new MutationObserver(()=>{
                     this.initSelect2()
@@ -429,7 +443,7 @@
             }
         },
         template : simple_template(`
-        <select ${directives} ref="select">
+        <select  ${directives} ref="select">
             <slot></slot>
         </select>
         `)

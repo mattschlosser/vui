@@ -33,15 +33,18 @@
             },
             disabled : {
                 type: Boolean
+            },
+            validate : {
+                type : Function
             }
         },
         methods : {
             submit : async function(){
                 if (this.disabled) return;
                 let result = await this.$validator.validate(this.scope + ".*");
-                if (result) {
-                    this.$emit("submit",this.edit,this.reset);
-                }
+                if (!result) return;
+                if (this.validate && !(await this.validate(this.edit))) return;
+                this.$emit("submit",this.edit,this.reset);
             },
             async reset(){
                 if (this.object){

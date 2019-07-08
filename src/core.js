@@ -178,7 +178,10 @@ export default {
         Vue.prototype.$poll = new Vue ({
             created(){
                 this.tasks = new Map();
-                this.interval = setInterval(this.update, 5000);
+                window.onAppReady(()=>{
+                    this.update();
+                    this.interval = setInterval(this.update, 5000);
+                });
                 this.seq = 0;
                 this.ack = -1;
                 this.$bus.$on("login",this.startService);

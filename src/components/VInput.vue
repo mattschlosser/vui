@@ -123,15 +123,18 @@
                     border-color: #5db0ff;
                     box-shadow: 0 0 0 0.125rem rgba(52,142,227,.3);
                 }
-
-                &:last-of-type {
-                    border-top-right-radius: 6px;
-                    border-bottom-right-radius: 6px;
-                }
             }
+
             .input-group-addon {
                 border-top-left-radius: 0px;
                 border-bottom-left-radius: 0px;
+            }
+
+            &.input-daterange{
+                input:last-of-type {
+                    border-top-right-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                }
             }
         }
 

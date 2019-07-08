@@ -529,10 +529,12 @@
             checkValue : (val)=>_.isArray(val)
         },
         watch: {
-            edit(val){
+            async edit(val){
                 $(this.$refs.startdate).datepicker("update",val[0]);
                 $(this.$refs.enddate).datepicker("update",val[1]);
-                $(this.$refs.inputGroup).datepicker('updateDates'); 
+                $(this.$refs.inputGroup).datepicker('updateDates');
+                await this.$nextTick();
+                this.$validator.validate(this.fullName);
             }
         },
         mounted(){
@@ -560,13 +562,13 @@
                 let cls = base.computed.inputGroupClass.apply(this);
                 cls["input-group input-daterange v-input-date-picker"] = true;
                 return cls;
-            }
+            },
         },
         template : base_template(`
             <input ref="startdate" type="text" :class="formControlClass" placeholder="Start Date" readonly :value="edit[0]">
             <div class="input-group-addon">to</div>
             <input ref="enddate" type="text" :class="formControlClass"  placeholder="End Date" readonly :value="edit[1]">
-        `)
+        `,`<input v-model="edit[0] ? edit[1] : edit[0]" v-bind="attrs" v-validate="validate" :data-vv-as="edit[0] ? 'end date' : 'start date'" class="d-none">`)
     };
 
 

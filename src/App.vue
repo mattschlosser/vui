@@ -34,7 +34,7 @@
                         <v-input type="date" label="month" v-model="edit.date" required :option="{minViewMode : 1}" format="MMM YYYY"></v-input>
 
                         <v-input type="date-range" label="DateRange" v-model="edit.daterange" required></v-input>
-                        <v-input type="date-range" label="Selectable Date Range" v-model="edit.daterange" selectable></v-input>
+                        <v-input type="date-range" label="Selectable Date Range" v-model="edit.s_daterange" selectable></v-input>
 
 
                         <v-input type="password-confirm" label="password" v-model="edit.psw"></v-input>

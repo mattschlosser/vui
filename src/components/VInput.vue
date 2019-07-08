@@ -205,7 +205,7 @@
     import VueTimepicker from "vue2-timepicker";
 
 
-    const base_template =  (t) => `
+    const base_template =  (t,r="") => `
     <div class="v-input" :class="{'form-group':label, row : inline, 'invalid' : error}">
         <div v-if="label" :class="inline ? 'col-3 d-flex align-items-center' : ''">
             <label :class="inline ? 'mb-0' : ''">{{labelContent}}</label>
@@ -214,6 +214,7 @@
             ${t}
             <div class="invalid-feedback">{{error}}</div>
         </div>
+        ${r}
     </div>`;
 
     // base
@@ -509,11 +510,10 @@
         },
         template : base_template(`
             <input v-bind="attrs" :class="formControlClass" readonly>
-            <input v-model="edit" v-bind="attrs" v-validate="validate" :data-vv-as="printName" class="d-none">
             <div  class="input-group-addon">
                 <i class="far fa-calendar-alt cursor-pointer"></i>
             </div>
-        `)
+        `,`<input v-model="edit" v-bind="attrs" v-validate="validate" :data-vv-as="printName" class="d-none">`)
     };
 
     const daterange = {

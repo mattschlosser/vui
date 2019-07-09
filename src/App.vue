@@ -10,7 +10,7 @@
                 <v-form submit-btn ref="f">
                     <template #default = "{edit}">
                         <code>{{JSON.stringify(edit)}}</code>
-                        <v-input label="text" required v-model="edit.text" inline></v-input>
+                        <v-input label="text" required v-model="edit.text" inline @input='print("input")' @change='print("change")'></v-input>
                         <v-input label="textarea"  type="textarea" required v-model="edit.detail"></v-input>
                         
                         <v-input type="number" label="number" v-model.number="edit.limit" min="50" max="100" step="10" required large></v-input>
@@ -106,6 +106,11 @@ export default {
                 }
   
             ]
+        }
+    },
+    methods : {
+        print(val){
+            window.console.log(val);
         }
     },
     components 

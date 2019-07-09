@@ -232,8 +232,9 @@
             if (this.$parent.$options.name == "VForm"){
                 this.$form = this.$parent;
                 this.$form.$on("reset",this.reset); 
-            } 
-            this.reset();
+            } else {
+                this.reset();
+            }
         },
         beforeDestroy(){
             if (this.$form){
@@ -256,11 +257,17 @@
             checkValue : (val) => val != null,
             reset(){
                 this.$validator.reset();
-                this.edit = this.editVal;
+                this.input(this.editVal,false);
                 this.onReset();
             },
             onReset(){
 
+            },
+            input(val,change=true){
+                this.$emit("input",val);
+                if (change){
+                    this.$emit("change",val);
+                }
             }
         },
         computed : {
@@ -304,7 +311,7 @@
                     return this.editVal;
                 },
                 set(val){
-                    this.$emit("input",val);
+                    this.input(val);
                 }
             }
         },
@@ -654,7 +661,7 @@
                     return _.map(this.editVal,tag=>({text : tag,classes : "bg-primary"}));
                 },
                 set(val){
-                    this.$emit("input",val);
+                    this.input(val);
                 }
             }
         },
@@ -690,7 +697,7 @@
                         let {HH,mm} = val;
                         val = `${HH}:${mm}`;
                     }
-                    this.$emit("input",val);
+                    this.input(val);
                 }
             }
         },
@@ -731,7 +738,7 @@
                     if (!_.isString(val)){
                         val = val.hex8;
                     }
-                    this.$emit("input",val);
+                    this.input(val);
                 }
             },
             iconClass(){

@@ -1,12 +1,7 @@
 <style lang="less">
     .v-input {
-        .v-input-group>select[data-value='']{
-            color : #999;
-            &>option {
-                color : initial
-            }
-        }
-
+        margin-bottom: 1rem;
+    
         .select2.select2-container{
             max-width : 100%;
         }
@@ -25,32 +20,40 @@
             position: relative;
             line-height: normal;
             height: 40px;
-        }
-        .color-picker-trigger {
-            display: inline-block;
-            box-sizing: border-box;
-            height: 40px;
-            width: 40px;
-            padding: 4px;
-            border: 1px solid #e6e6e6;
-            border-radius: 4px;
-            font-size: 0;
-            position: relative;
-            cursor: pointer;
-        }
-        .color-picker-color{
-            position: relative;
-            display: block;
-            box-sizing: border-box;
-            border: 1px solid #999;
-            border-radius: 2px;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            &.is-alpha{
-                background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)
+
+            .color-picker-trigger {
+                display: inline-block;
+                box-sizing: border-box;
+                height: 40px;
+                width: 40px;
+                padding: 4px;
+                border: 1px solid #e6e6e6;
+                border-radius: 4px;
+                font-size: 0;
+                position: relative;
+                cursor: pointer;
+                
+                .color-picker-color{
+                    position: relative;
+                    display: block;
+                    box-sizing: border-box;
+                    border: 1px solid #999;
+                    border-radius: 2px;
+                    width: 100%;
+                    height: 100%;
+                    text-align: center;
+                    &.is-alpha{
+                        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==)
+                    }
+                }
+            }
+
+            &.disabled .color-picker-trigger {
+                cursor: unset;
             }
         }
+
+        
         .color-picker-inner {
             position: absolute;
             left: 0;
@@ -116,7 +119,7 @@
         }
 
         .v-input-date-picker {
-            input{
+            input:not([disabled]){
                 opacity : 1;
                 background : #fff !important;
                 &:focus{
@@ -384,7 +387,7 @@
         },
         extends : components.simple,
         template : simple_template(`
-        <select ${directives} :data-value="value">
+        <select ${directives}>
             <option v-if="attrs.showPlaceholder" value="" disabled>--- {{attrs.placeholder}} ---</option>
             <slot></slot>
         </select>
@@ -575,9 +578,9 @@
             },
         },
         template : base_template(`
-            <input ref="startdate" type="text" :class="formControlClass" placeholder="Start Date" readonly :value="edit[0]">
+            <input ref="startdate" type="text" :class="formControlClass" placeholder="Start Date" readonly :value="edit[0]" :disabled="attrs.disabled">
             <div class="input-group-addon">to</div>
-            <input ref="enddate" type="text" :class="formControlClass"  placeholder="End Date" readonly :value="edit[1]">
+            <input ref="enddate" type="text" :class="formControlClass"  placeholder="End Date" readonly :value="edit[1]" :disabled="attrs.disabled">
         `,`<input v-model="edit[0] ? edit[1] : edit[0]" v-bind="attrs" v-validate="validate" :data-vv-as="edit[0] ? 'end date' : 'start date'" class="d-none">`)
     };
 
@@ -637,6 +640,7 @@
                         placeholder = "Re-enter Password"
                         :class="formControlClass" 
                         ref="confirmation"
+                        :disabled="attrs.disabled"
                     >
                 </div>
             </div>
@@ -707,8 +711,9 @@
         template : base_template(`
             <vue-timepicker
                 v-model ="edit"
+                v-show="!attrs.disabled"
             />
-            <input class="d-none" v-model="editVal" v-bind="attrs" v-validate="'date_format:HH:mm'" :data-vv-as="printName"/>
+            <input v-show="attrs.disabled"  :class="formControlClass" style="width:10em" v-model="editVal" v-bind="attrs" v-validate="'date_format:HH:mm'" :data-vv-as="printName"/>
         `)
     };
 
@@ -750,6 +755,7 @@
         },
         methods : {
             togglePicker() {
+                if (this.attrs.disabled) return;
                 this.displayPicker ? this.hidePicker() : this.showPicker();
             },
             showPicker() {
@@ -769,7 +775,7 @@
             }
         },
         template : base_template(`
-            <div class="color-picker">
+            <div class="color-picker" :class="{disabled : attrs.disabled}">
                 <div class="color-picker-trigger" @click="togglePicker">
                     <span class="color-picker-color is-alpha">
                         <span 

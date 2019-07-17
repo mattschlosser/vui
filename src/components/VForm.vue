@@ -1,7 +1,7 @@
 <template>
     <form ref="form" @submit.prevent='submit' novalidate :data-vv-scope="scope">
         <div>
-            <slot :edit="edit"></slot>
+            <slot :edit="edit" :disabled="disabled"></slot>
         </div>
         <button v-if="submitBtn && !disabled" type='submit' class='btn btn-green pull-right'>Save</button>
     </form>

@@ -278,6 +278,7 @@
                 let attrs = _.clone(this.$attrs);
                 attrs.disabled = attrs.disabled || attrs.disabled === "" || (this.$form ? this.$form.disabled : false)
                 attrs.autocomplete = attrs.autocomplete || "off";
+                attrs["data-vv-as"] = attrs["data-vv-as"] ||  _.lowerCase(attrs.name);
                 return attrs;
             },
             labelContent(){
@@ -290,9 +291,6 @@
             },
             fullName(){
                 return this.scope ? this.scope + "." + this.attrs.name : this.attrs.name;
-            },
-            printName(){
-                return  _.lowerCase(this.attrs.name);
             },
             error(){
                 return this.errors.first(this.fullName);
@@ -335,7 +333,7 @@
     };
 
     // general directives
-    const directives = `v-bind="attrs" v-model="edit" :class="formControlClass" v-validate="validate" :data-vv-as="printName"`;
+    const directives = ` v-model="edit" :class="formControlClass" v-validate="validate" v-bind="attrs"`;
 
     // all type of input
     const components = {};
@@ -526,7 +524,7 @@
             <div  class="input-group-addon">
                 <i class="far fa-calendar-alt cursor-pointer"></i>
             </div>
-        `,`<input v-model="edit" v-bind="attrs" v-validate="validate" :data-vv-as="printName" class="d-none">`)
+        `,`<input v-model="edit" v-bind="attrs" v-validate="validate" class="d-none">`)
     };
 
     const daterange = {
@@ -581,7 +579,7 @@
             <input ref="startdate" type="text" :class="formControlClass" placeholder="Start Date" readonly :value="edit[0]" :disabled="attrs.disabled">
             <div class="input-group-addon">to</div>
             <input ref="enddate" type="text" :class="formControlClass"  placeholder="End Date" readonly :value="edit[1]" :disabled="attrs.disabled">
-        `,`<input v-model="edit[0] ? edit[1] : edit[0]" v-bind="attrs" v-validate="validate" :data-vv-as="edit[0] ? 'end date' : 'start date'" class="d-none">`)
+        `,`<input v-model="edit[0] ? edit[1] : edit[0]"  v-validate="validate" :data-vv-as="edit[0] ? 'end date' : 'start date'" class="d-none" v-bind="attrs">`)
     };
 
 
@@ -623,15 +621,14 @@
             <div class="row">
                 <div class="col">
                     <input 
-                        v-bind="attrs" 
                         v-model="edit" 
                         :class="formControlClass" 
                         v-validate 
-                        :data-vv-as="printName"
                         ref="password" 
                         type="password" 
                         placeholder="Password"
                         v-validate="'required|hasLower|hasNumber|hasUpper|min:8|confirmed:confirmation'"
+                        v-bind="attrs" 
                     >
                 </div>
                 <div class="col">
@@ -713,7 +710,7 @@
                 v-model ="edit"
                 v-show="!attrs.disabled"
             />
-            <input v-show="attrs.disabled"  :class="formControlClass" style="width:10em" v-model="editVal" v-bind="attrs" v-validate="'date_format:HH:mm'" :data-vv-as="printName"/>
+            <input v-show="attrs.disabled"  :class="formControlClass" style="width:10em" v-model="editVal" v-validate="'date_format:HH:mm'"  v-bind="attrs"/>
         `)
     };
 

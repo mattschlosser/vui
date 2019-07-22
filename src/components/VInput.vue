@@ -573,9 +573,9 @@
         },
 
         template : base_template(`
-            <input class="text-center" ref="startdate" type="time" :class="formControlClass" v-validate="validate" placeholder="Start Time" v-model="edit[0]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="start time">
+            <input class="text-center" ref="startdate" type="time" :class="formControlClass" v-validate="validate" placeholder="Start Time" :value="edit[0]" @input="e=>edit=[e.srcElement.value,edit[1]]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="start time">
             <div class="input-group-addon rounded-0">to</div>
-            <input class="text-center rounded-right" ref="enddate" type="time" :class="formControlClass" v-validate="validate" placeholder="End Time" v-model="edit[1]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="end time">
+            <input class="text-center rounded-right" ref="enddate" type="time" :class="formControlClass" v-validate="validate" placeholder="End Time" :value="edit[1]" @input="e=>edit=[edit[0],e.srcElement.value]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="end time">
         `)
     };
 

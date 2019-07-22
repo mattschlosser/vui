@@ -133,51 +133,23 @@
                 border-bottom-left-radius: 0px;
             }
 
-            &.input-daterange{
-                input:last-of-type {
-                    border-top-right-radius: 6px;
-                    border-bottom-right-radius: 6px;
-                }
-            }
-        }
-
-        .time-picker {
-            &>input.display-time {
-                border: 1px solid #d3d8de;
-                box-shadow: none;
-                font-size: 12px;
-                line-height: 1.42857143;
-                height: 34px;
-                padding: 6px 12px;
-                border-radius: 0.25rem;
-                
-                &:focus {
-                    border-color: #5db0ff;
-                    outline: 0;
-                    box-shadow: 0 0 0 0.125rem rgba(52,142,227,.3);
-                }
-            }
-
-            .dropdown ul li.active,.dropdown ul li.active:hover {
-                background-color: #5db0ff;
-            }
         }
 
         &.invalid {
             .select2-selection{
                 border-color: #dc3545!important;
             }
-   
 
-            .invalid-feedback{
-                display: block;
-            }
-            .form-control,.time-picker>input.display-time{
+            .form-control{
                 border-color: #dc3545;
                 &:focus {
                     border-color: #dc3545;
                     box-shadow: 0 0 0 0.2rem rgba(220,53,69,.25);  
                 }
+            }
+
+            .invalid-feedback{
+                display: block;
             }
         }
 
@@ -208,15 +180,13 @@
     // validators 
     import Chrome from "vue-color/src/components/Chrome.vue";
     import VueTagsInput from "@johmun/vue-tags-input";
-    import VueTimepicker from "vue2-timepicker";
-
 
     const base_template =  (t,r="") => `
     <div class="v-input" :class="{'form-group':label, row : inline, 'invalid' : error}">
         <div v-if="label" :class="inline ? 'col-3 d-flex align-items-center' : ''">
             <label :class="inline ? 'mb-0' : ''">{{labelContent}}</label>
         </div>
-        <div ref="inputGroup" :class="inputGroupClass" class="v-input-group">
+        <div ref="inputGroup" :class="inputGroupClass">
             ${t}
             <div class="invalid-feedback">{{error}}</div>
         </div>
@@ -578,10 +548,36 @@
         template : base_template(`
             <input ref="startdate" type="text" :class="formControlClass" placeholder="Start Date" readonly :value="edit[0]" :disabled="attrs.disabled">
             <div class="input-group-addon">to</div>
-            <input ref="enddate" type="text" :class="formControlClass"  placeholder="End Date" readonly :value="edit[1]" :disabled="attrs.disabled">
+            <input ref="enddate" type="text" :class="formControlClass" class="rounded-right" placeholder="End Date" readonly :value="edit[1]" :disabled="attrs.disabled">
         `,`<input v-model="edit[0] ? edit[1] : edit[0]"  v-validate="validate" :data-vv-as="edit[0] ? 'end date' : 'start date'" class="d-none" v-bind="attrs">`)
     };
 
+    components["time-range"] = {
+        extends : base,
+        props : {
+            default : {
+                type : Array,
+                default :()=>["",""]
+            }    
+        },
+        computed : {
+            inputGroupClass(){
+                let cls = base.computed.inputGroupClass.apply(this);
+                cls["input-group"] = true;
+                return cls;
+            }
+        },
+        methods : {
+            editDefault(){return this.default},
+            checkValue : (val)=>_.isArray(val)
+        },
+
+        template : base_template(`
+            <input class="text-center" ref="startdate" type="time" :class="formControlClass" v-validate="validate" placeholder="Start Time" v-model="edit[0]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="start time">
+            <div class="input-group-addon rounded-0">to</div>
+            <input class="text-center rounded-right" ref="enddate" type="time" :class="formControlClass" v-validate="validate" placeholder="End Time" v-model="edit[1]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="end time">
+        `)
+    };
 
     components["date-range"] = {
         functional : true,
@@ -680,41 +676,6 @@
         )
     };
 
-
-    components.time = {
-        extends : base,
-        props : ["type"],
-        computed : {
-            edit : {
-                get(){
-                    if (this.editVal){
-                        let [HH,mm] = _.split(this.editVal,":");
-                        return {HH,mm}
-                    }
-                    return {HH : "", mm : ""};
-                },
-                set(val){
-                    if (_.isObject(val)){
-                        let {HH,mm} = val;
-                        val = `${HH}:${mm}`;
-                    }
-                    this.input(val);
-                }
-            }
-        },
-        components : {
-            VueTimepicker
-        },
-        template : base_template(`
-            <vue-timepicker
-                v-model ="edit"
-                v-show="!attrs.disabled"
-            />
-            <input v-show="attrs.disabled"  :class="formControlClass" style="width:10em" v-model="editVal" v-validate="'date_format:HH:mm'"  v-bind="attrs"/>
-        `)
-    };
-
-
     components.color = {
         extends : base,
         props : {
@@ -795,6 +756,7 @@
             </div>
         `)
     };
+
 
     export default {
         name : "VInput",

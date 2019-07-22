@@ -10,7 +10,9 @@
                 <v-form submit-btn ref="f">
                     <template #default = "{edit}">
                         <code>{{JSON.stringify(edit)}}</code>
-                        <v-input label="P.O. #" required v-model="edit.text" inline @input='print("input")' @change='print("change")' data-vv-as="P.O. #"></v-input>
+                        
+                        <v-input label="text" required></v-input>
+
                         <v-input label="textarea"  type="textarea" required v-model="edit.detail"></v-input>
                         
                         <v-input type="number" label="number" v-model.number="edit.limit" min="50" max="100" step="10" required large></v-input>
@@ -34,6 +36,7 @@
                         <v-input type="date" label="month" v-model="edit.date" required :option="{minViewMode : 1}" format="MMM YYYY"></v-input>
 
                         <v-input type="date-range" label="DateRange" v-model="edit.daterange" required></v-input>
+                        <v-input label="Time Range" required v-model="edit.timerange"  type="time-range"></v-input>
                         <v-input type="date-range" label="Selectable Date Range" v-model="edit.s_daterange" selectable></v-input>
 
 

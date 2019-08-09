@@ -314,6 +314,25 @@
         template : base_template(`<textarea ${directives} ></textarea>`)
     };
 
+    // check box
+    components.checkbox = {
+        extends : base,
+        data(){
+            return {
+                id :  _.uniqueId('_checkbox_')
+            }
+        },
+        methods : {
+            editDefault : () => false,
+        },
+        template : `
+        <div class="checkbox checkbox-css">
+            <input  :id="id" type="checkbox" ${directives}/>
+            <label :for="id" class="noselect" :class="{'cursor-pointer': !attrs.disabled}">{{label}}<slot></slot></label>
+        </div>
+        `
+    };
+
     // general template
     const simple_template = (t) => base_template(`
         <div v-if="prepend" class="input-group-prepend">

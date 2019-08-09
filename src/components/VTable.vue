@@ -15,7 +15,7 @@
                 <label>
                     Show 
                     <select class="form-control form-control-sm" v-model="ipg">
-                        <option v-for="option in ipgOptions"  :key="option" :value="option">{{option}}</option>
+                        <option v-for="option in itemPerPageOptions"  :key="option" :value="option">{{option}}</option>
                         <option value="-1">All</option>
                     </select> 
                     entries
@@ -51,7 +51,8 @@
                         <tr v-for="row in page" :key="row.id">
                             <td v-for="(field,i) in cols" :key="i" :class="css(field,row)">
                                 <slot v-if="field.slot" :name="field.name" :row="row"></slot>
-                                <span v-else-if="display(field, row)">
+                                <span v-else-if="field.html" v-html="field.html(row,field.name||field)"></span>
+                                <span v-else-if="display(field, row) != null">
                                     {{ display(field, row) }}
                                 </span>
                                 <span v-else class="text-muted">
@@ -100,6 +101,7 @@ export default {
                 headSlot : Boolean,                 // optional, if use slot for head
                 slot : Boolean,                     // optional, if use slot for content
                 display : function(row,field_name) => String,  // optional content for display
+                html : function(row,field_name) => HTML, // optional html content for display
                 value :                             // optional, value for search and sort
                     function(row,field_name) => Any  or
                     {
@@ -108,14 +110,17 @@ export default {
                     } 
                 css : String or function(row,field_name) => String
             }
-        */
+        */,
+        itemPerPageOptions : {
+            type : Array,
+            default : ()=>[10,20,40,80]
+        }
+        
     },
 
     data(){
-        let ipgOptions = [10,20,40,80];
         return {
-            ipgOptions,
-            ipg : ipgOptions[0],
+            ipg : this.itemPerPageOptions[0],
             keyWord : "",
             sortFieldIndex : 0,
             sortAsc : true

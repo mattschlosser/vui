@@ -144,6 +144,9 @@ export default {
             bind(el,binding){
                 el.title = binding.value;
                 $(el).tooltip();
+            },
+            unbind(el){
+                $(el).tooltip("dispose");
             }
         });
 

@@ -7,7 +7,7 @@
                 <h4 class="panel-title">v-input</h4>
             </div> 
             <div class="panel-body">
-                <v-form submit-btn ref="f">
+                <v-form submit-btn ref="f" :disabled="formDisabled">
                     <template #default = "{edit}">
                         <code>{{JSON.stringify(edit)}}</code>
                         
@@ -48,6 +48,10 @@
 
                         <v-input type="time" label="time" v-model="edit.time" required></v-input>
 
+                        <v-input type="checkbox" v-model="edit.checkbox">Check Box</v-input>
+
+
+                        <button type="button" class="btn btn-secondary" @click="toggleForm">{{formDisabled ? 'Enable' : 'Disable'}}</button>
                         <button type="button" class="btn btn-primary" @click="$refs.f.reset()">Reset</button>
                     </template>
                 </v-form>
@@ -107,13 +111,16 @@ export default {
                     name : "test",
                     display : row => 12345678 + row.age
                 }
-  
-            ]
+            ],
+            formDisabled : false
         }
     },
     methods : {
         print(val){
             window.console.log(val);
+        },
+        toggleForm(){
+            this.formDisabled = ! this.formDisabled;
         }
     },
     components 

@@ -141,12 +141,31 @@ export default {
         * *********************
         */
         Vue.directive('tooltip',{
-            bind(el,binding){
-                el.title = binding.value;
+            bind(el,{value : title}){
+                el.title = title;
                 $(el).tooltip();
             },
             unbind(el){
                 $(el).tooltip("dispose");
+            }
+        });
+        Vue.directive('collapse',{
+            bind(el,{value}){
+                $(el).addClass("collapse");
+                if (value){
+                    $(el).addClass("show");
+                }
+            },
+            update(el,{value}){
+                if (value){
+                    $(el).collapse("show");
+                } else {
+                    $(el).collapse("hide");
+                }
+                
+            },
+            unbind(el){
+                $(el).collapse("dispose");
             }
         });
 

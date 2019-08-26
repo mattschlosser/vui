@@ -317,18 +317,13 @@
     // check box
     components.checkbox = {
         extends : base,
-        data(){
-            return {
-                id :  _.uniqueId('_checkbox_')
-            }
-        },
         methods : {
             editDefault : () => false,
         },
         template : `
-        <div class="checkbox checkbox-css">
-            <input  :id="id" type="checkbox" ${directives}/>
-            <label :for="id" class="noselect" :class="{'cursor-pointer': !attrs.disabled}">{{label}}<slot></slot></label>
+        <div class="checkbox checkbox-css" :class = "{'checkbox-inline' : inline}">
+            <input  :id="attrs.name" type="checkbox" ${directives}/>
+            <label :for="attrs.name" class="noselect" :class="{'cursor-pointer': !attrs.disabled}">{{label}}<slot></slot></label>
         </div>
         `
     };
@@ -385,7 +380,9 @@
     components.select2 = {
         extends : components.select,
         props : {
-            template : Function
+            template : Function,
+            templateResult : Function,
+            templateSelection : Function
         },
         mounted(){
             let config = {
@@ -404,7 +401,13 @@
             if (this.template){
                 config.templateResult = this.template;
                 config.templateSelection = this.template;
-            }    
+            } 
+            if (this.templateResult){
+                config.templateResult = this.templateResult;
+            }
+            if (this.templateSelection){
+                config.templateSelection = this.templateSelection;
+            }
 
 
             this.initSelect2 = ()=>{

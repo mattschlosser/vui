@@ -108,7 +108,8 @@ export default {
                         search : function(row,field_name) => Any,
                         sort : function(row,field_name) => Any
                     } 
-                css : String or function(row,field_name) => String
+                css : String or function(row,field_name) => String,
+                exportable : Boolean // default to be true
             }
         */,
         itemPerPageOptions : {
@@ -170,6 +171,18 @@ export default {
                 return field.css;
             }
             return "";
+        },
+        serialize(){
+            let cols = _.filter(this.cols,field=>field.exportable == null || field.exportable);
+            let rows = _.map(this.rows,row=>{
+                let output = [];
+                _.each(cols,field=>{
+                    output.push(this.display(field, row));
+                });
+                return output;
+            });
+            cols = _.map(cols,field=>this.printHead(field));
+            return {cols,rows};
         }
     },
 

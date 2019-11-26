@@ -240,14 +240,18 @@
             </slot>
         </div>
     `);
-
+    
     // base
     const base = {
         name : "VInput",
         data(){
             return {
-                editVal : null
+                editVal : null,
+                attrs : {}
             }
+        },
+        beforeCreate(){
+            this.id = _.uniqueId(this.$attrs.type);
         },
         created(){
             if (this.$parent.$options.name == "VForm"){
@@ -257,7 +261,6 @@
             if (!this.$form || this.$form.doneCreated){
                 this.reset();
             }
-            this.id = _.uniqueId(this.$attrs.type);
         },
         beforeDestroy(){
             if (this.$form){
@@ -297,25 +300,6 @@
             }
         },
         computed : {
-            attrs(){
-                let attrs = _.clone(this.$attrs);
-                attrs.disabled = attrs.disabled || attrs.disabled === "" || (this.$form ? this.$form.disabled : false)
-                attrs.required = attrs.required || attrs.required === ""
-                attrs.autocomplete = attrs.autocomplete || "off";
-                let name ;
-                if (attrs.name){
-                    name = attrs.name;
-                } else if(attrs.label){
-                    name = attrs.label;
-                } else if(attrs.placeholder){
-                    name = attrs.placeholder;
-                } else {
-                    name = this.id;
-                }
-                attrs.name = _.snakeCase(name);
-                attrs["data-vv-as"] = attrs["data-vv-as"] ||  _.lowerCase(attrs.name);
-                return attrs;
-            },
             labelContent(){
                 return this.label + ":" + (this.attrs.required && !this.attrs.disabled ? " *": "");
             },
@@ -361,6 +345,32 @@
                     } else {
                         this.editVal = this.editDefault();
                     }
+                },
+                immediate : true
+            },
+            $attrs : {
+                handler(val){
+                    if (_.isEqual(this.__last_attrs,val)){
+                        return;
+                    }
+                    this.__last_attrs = val;
+                    let attrs = _.clone(val);
+                    attrs.disabled = attrs.disabled || attrs.disabled === "" || (this.$form ? this.$form.disabled : false)
+                    attrs.required = attrs.required || attrs.required === ""
+                    attrs.autocomplete = attrs.autocomplete || "off";
+                    let name ;
+                    if (attrs.name){
+                        name = attrs.name;
+                    } else if(attrs.label){
+                        name = attrs.label;
+                    } else if(attrs.placeholder){
+                        name = attrs.placeholder;
+                    } else {
+                        name = this.id;
+                    }
+                    attrs.name = _.snakeCase(name);
+                    attrs["data-vv-as"] = attrs["data-vv-as"] ||  _.lowerCase(attrs.name);
+                    this.attrs = attrs;
                 },
                 immediate : true
             }

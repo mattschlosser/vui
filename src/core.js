@@ -1,4 +1,5 @@
 import VeeValidate from 'vee-validate';
+
 /*global _:true*/
 /*global $:true*/
 /*global moment:true*/
@@ -140,10 +141,31 @@ export default {
         *       Directive     *
         * *********************
         */
+        Vue.use(VeeValidate);
+
+        VeeValidate.Validator.extend("hasLower",{
+            getMessage : field => 'The ' + field + ' should contain at least one lower letter',
+            validate : value => value !== _.toUpper(value)
+        });
+        VeeValidate.Validator.extend("hasNumber",{
+            getMessage : field => 'The ' + field + ' should contain at least one number',
+            validate : value => value !== _.replace(value , new RegExp("[0-9]","g") ,"")
+        });
+        VeeValidate.Validator.extend("hasUpper",{
+            getMessage : field => 'The ' + field + ' should contain at least one upper letter',
+            validate : value => value !== _.toLower(value)
+        });
+
+
         Vue.directive('tooltip',{
             bind(el,{value : title}){
                 el.title = title;
-                $(el).tooltip();
+                $(el).tooltip({trigger : "hover"});
+            },
+            update(el,{value : title}){
+                $(el).tooltip("dispose");
+                el.title = title;
+                $(el).tooltip({trigger : "hover"});
             },
             unbind(el){
                 $(el).tooltip("dispose");
@@ -162,11 +184,10 @@ export default {
                 } else {
                     $(el).collapse("hide");
                 }
-                
             },
-            unbind(el){
-                $(el).collapse("dispose");
-            }
+            // unbind(el){
+            //     $(el).collapse("dispose");
+            // }
         });
 
 
@@ -175,21 +196,6 @@ export default {
         *       Plugins     *
         * *******************
         */
-        Vue.use(VeeValidate);
-
-        VeeValidate.Validator.extend("hasLower",{
-            getMessage : field => 'The ' + field + ' should contain at least one lower letter',
-            validate : value => value !== _.toUpper(value)
-        });
-        VeeValidate.Validator.extend("hasNumber",{
-            getMessage : field => 'The ' + field + ' should contain at least one number',
-            validate : value => value !== _.replace(value , new RegExp("[0-9]","g") ,"")
-        });
-        VeeValidate.Validator.extend("hasUpper",{
-            getMessage : field => 'The ' + field + ' should contain at least one upper letter',
-            validate : value => value !== _.toLower(value)
-        });
-
         // store
         Vue.prototype.$store = Vue.observable({});
 

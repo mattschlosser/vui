@@ -12,11 +12,15 @@
                         <div v-collapse="collapse">
                             <code>{{JSON.stringify(edit)}}</code>
                             
-                            <v-input label="text" required></v-input>
+                            <v-input label="text" required v-model="edit.text">
+                                <template #append>
+                                    <button class="btn btn-primary">123</button>
+                                </template>
+                            </v-input>
 
                             <v-input label="textarea"  type="textarea" required v-model="edit.detail"></v-input>
                             
-                            <v-input type="number" label="number" v-model.number="edit.limit" min="50" max="100" step="10" required large></v-input>
+                            <v-input type="number" label="number" v-model.number="edit.limit" min="50" max="100" step="10" required large append="%"></v-input>
 
                             <v-input type="select" label="select" v-model="edit.select" required>
                                 <option v-for="i in edit.limit" :value="i" :key="i">{{i}}</option>
@@ -39,7 +43,7 @@
                             <v-input type="date-range" label="DateRange" v-model="edit.daterange" required></v-input>
                             <v-input label="Time Range" required v-model="edit.timerange"  type="time-range"></v-input>
                             <v-input type="date-range" label="Selectable Date Range" v-model="edit.s_daterange" selectable></v-input>
-
+                            <div>{{edit.s_daterange}}</div>
 
                             <v-input type="password-confirm" label="password" v-model="edit.psw"></v-input>
 
@@ -50,7 +54,9 @@
                             <v-input type="time" label="time" v-model="edit.time" required></v-input>
 
                             <v-input type="checkbox" v-model="edit.checkbox" inline>Check Box</v-input>
-                            <v-input type="checkbox" v-model="edit.checkbox" inline>Check Box2</v-input>
+                            <v-input type="checkbox" v-model="edit.checkbox" disabled>Check Box2</v-input>
+
+                            <v-input validate="numeric" v-model.number="edit.test"></v-input>
                         </div>
 
 
@@ -70,7 +76,7 @@
                 <h4 class="panel-title">v-table</h4>
             </div> 
             <div class="panel-body">
-                <v-table :rows="table" :cols="fields" ref="vt">
+                <v-table :rows="table" :cols="fields" ref="vt" :item-per-page-options="[5,10,20,50]">
                     <template #buttons>
                         <button class="btn btn-sm btn-primary">New User</button>
                         <button class="btn btn-sm btn-primary" @click="exportTable">Export</button>
@@ -91,34 +97,38 @@ export default {
         this.$appReady();
     },
     data(){
+        let fields = [
+            {
+                name : "title",
+                display : row => `${row.index}. ${row.name.last} ${row.name.last}`,
+                value : {
+                    sort : row => row.index,
+                }
+            },
+            "eyeColor",
+            "age",
+            {
+                name : "isActive",
+                width : "50px",
+                sortable : false
+            },
+            {
+                name : "phone",
+                head : "Phone #",
+                css : ()=>"text-primary"
+            },
+            {
+                name : "test",
+                display : row => 12345678 + row.age
+            }
+        ];
+
         return {
             table : table,
-            fields : [
-                {
-                    name : "title",
-                    display : row => `${row.index}. ${row.name.last} ${row.name.last}`,
-                    value : {
-                        sort : row => row.index,
-                    }
-                },
-                "eyeColor",
-                "age",
-                {
-                    name : "isActive",
-                    width : "20px"
-                },
-                {
-                    name : "phone",
-                    head : "Phone #"
-                },
-                "address",
-                {
-                    name : "test",
-                    display : row => 12345678 + row.age
-                }
-            ],
+            fields,
             formDisabled : false,
-            collapse : true
+            collapse : true,
+            test : {"test" : 1}
         }
     },
     methods : {

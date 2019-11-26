@@ -7,3 +7,7 @@ Vue.use(core);
 _.each(components,(component,name)=>{
     Vue.component(name,component);
 });
+
+window.VUI = {
+    ...components
+}

@@ -51,6 +51,7 @@ export default {
         page(){
             // eslint-disable-next-line
             this.pageIndex = _.min([this.pages.length - 1, this.pageIndex]);
+            this.$emit("updated");
             return this.pages[this.pageIndex];
         },
         pageStatus(){

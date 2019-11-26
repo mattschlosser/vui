@@ -5,6 +5,7 @@
         :item-per-page="ipg"
         class="container-fluid v-table"
         ref="pagination"
+        @updated="updateStickPos"
     >
         <template slot-scope="{ page,index }">
             <div class="vt-buttons">
@@ -28,40 +29,73 @@
                 </label>
             </div>
 
-            <div class="vt-table">
+            <div class="vt-table d-flex">
                 <table>
                     <thead>
                         <tr>
                             <th 
-                                v-for="(field,i) in cols" 
-                                :key="i" 
-                                class="sorting" 
-                                :class="sortFieldIndex == i ? (sortAsc ? 'ascending' : 'descending') : ''" 
-                                @click="sort(i)"
-                                :style="field.width ? `width:${field.width}` : '' "    
+                                v-for="(field,i) in vt_fields"
+                                :key="field.name" 
+                                :class="{
+                                    sorting : field.sortable,
+                                    ascending : field.sorting == 1,
+                                    descending : field.sorting == -1,
+                                    sticky : field.sticky
+                                }" 
+                                @click="sort(field)" 
+                                :style="{
+                                    width : field.width,
+                                    minWidth : field.width,
+                                    maxWidth : field.width
+                                }"
+                                draggable
+                                @dragstart="dragstart($event,field)"
+                                @dragend="dragend"
+                                @dblclick="stick(field)"
+                                :data-name="field.name"
                             >
+                                <span 
+                                    class="dropline" 
+                                    @dragover="dragover($event,i*2)" 
+                                    @dragleave="dragleave" 
+                                    @drop="drop($event,field,0)"  
+                                    :class="{'dragging-over' : draggingOver == i*2}"
+                                ></span>
                                 <slot v-if="field.headSlot" :name="`${field.name}-head`"></slot>
-                                <template v-else>
-                                    {{ printHead(field) }}
-                                </template>
+                                <span v-else>
+                                    {{field.head}}
+                                </span>
+                                <span class="underline" v-if="field.sticky"></span>
+                                <span 
+                                    class="dropline"
+                                    @dragover="dragover($event,i*2+1)"  
+                                    @dragleave="dragleave" 
+                                    @drop="drop($event,field,1)"
+                                    :class="{'dragging-over' : draggingOver == i*2+1}"
+                                ></span>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="row in page" :key="row.id">
-                            <td v-for="(field,i) in cols" :key="i" :class="css(field,row)">
+                            <td 
+                                :key="field.name" 
+                                :class="css(field,row)"  
+                                v-for="field in vt_fields"
+                                :data-name="field.name"    
+                            >
                                 <slot v-if="field.slot" :name="field.name" :row="row"></slot>
-                                <span v-else-if="field.html" v-html="field.html(row,field.name||field)"></span>
+                                <span v-else-if="field.html" v-html="field.html(row,field.name)"></span>
                                 <span v-else-if="display(field, row) != null">
                                     {{ display(field, row) }}
                                 </span>
                                 <span v-else class="text-muted">
                                     None
-                                </span>
+                                </span> 
                             </td>
                         </tr>
                         <tr v-if="page.length == 0">
-                            <td :colspan="cols.length" class="text-center">No matching records found</td>
+                            <td :colspan="vt_fields.length" class="text-center">No matching records found</td>
                         </tr>
                     </tbody>
                 </table>
@@ -78,6 +112,7 @@
 import VPagination from "./VPagination.vue"
 
 /*global _:true*/
+/*global $:true*/
 /*eslint no-undef: "error"*/
 export default {
     name: 'VTable',
@@ -108,8 +143,10 @@ export default {
                         search : function(row,field_name) => Any,
                         sort : function(row,field_name) => Any
                     } 
-                css : String or function(row,field_name) => String,
-                exportable : Boolean // default to be true
+                width : String, // optional, width for th,
+                css : String or function(row,field_name) => String, // optional, css classes apply to td
+                exportable : Boolean // default to be true,
+                sortable : Boolean // default to be true
             }
         */,
         itemPerPageOptions : {
@@ -123,21 +160,75 @@ export default {
         return {
             ipg : this.itemPerPageOptions[0],
             keyWord : "",
-            sortFieldIndex : 0,
-            sortAsc : true
+            dragging : null,
+            draggingOver : null,
+            sorting : null
         };
     },
-
     methods : {
-        printHead(field){
-            return field.head || _.startCase(field.name || field);
+        async updateStickPos(){
+            await this.$nextTick();
+            let pos = 0;
+            _.each(this.vt_fields,field=>{
+                if (field.sticky){
+                    $(this.$el).find(`[data-name='${field.name}']`).css("left",`${pos}px`);
+                    pos += $(this.$el).find(`th[data-name=${field.name}]`).outerWidth();
+                } else {
+                    $(this.$el).find(`[data-name='${field.name}']`).css("left","");
+                }
+            });
         },
-        sort(i){
-            if ( this.sortFieldIndex == i){
-                this.sortAsc = !this.sortAsc;
+        dragstart(e,field){
+            e.dataTransfer.setData("text/plain",field.name);
+            this.dragging = field;
+        },
+        dragend(){
+            this.dragging = null;
+            this.draggingOver =null;
+        },
+        dragover(e,index){
+            if (this.dragging){
+                e.preventDefault();
+                this.draggingOver = index;
+            }
+        },
+        dragleave(){
+            this.draggingOver =null;
+        },
+        drop(e,field,offset){
+            if ( !this.dragging || (field == this.dragging)){
+                return;
+            }
+            e.preventDefault();
+            let index = _.indexOf(this.vt_fields,this.dragging);
+            this.vt_fields.splice(index,1);
+            index = _.indexOf(this.vt_fields,field) + offset;
+            this.vt_fields.splice(index,0,this.dragging);
+            if (field.sticky){
+                this.$set(this.dragging,"sticky",true);
+            }
+            this.updateStickPos();
+        },
+        stick(field){
+            if (!field.sticky){
+                this.$set(field,"sticky",true);
             } else {
-                this.sortFieldIndex = i;
-                this.sortAsc = true;
+                this.$delete(field,"sticky");
+            }
+            this.updateStickPos();
+        },
+        sort(field){
+            if (!field.sortable){
+                return;
+            }
+            if (this.sorting != field){
+                if (this.sorting){
+                    this.$delete(this.sorting,'sorting');
+                }
+                this.$set(field,'sorting',1);
+                this.sorting = field;
+            } else {
+                field.sorting = -field.sorting;
             }
         },
         value(field,row,type){
@@ -150,7 +241,7 @@ export default {
             return this.display(field,row);
         },
         display(field, row){
-            return field.display ? field.display(row,field.name) : row[field.name || field];
+            return field.display ? field.display(row,field.name) : row[field.name];
         },
         info(index){
             let total = _.size(this.rows);
@@ -164,16 +255,24 @@ export default {
             return info;
         },
         css(field,row){
+            let css = "";
             if (field.css){
                 if (_.isFunction(field.css)){
-                    return field.css(row,field.name);
-                } 
-                return field.css;
+                    css = field.css(row,field.name);
+                } else {
+                    css = field.css;
+                }
             }
-            return "";
+            if (!_.isObject(css)){
+                css = {  
+                    [css] : true
+                };
+            }
+            css.sticky = field.sticky;
+            return css;
         },
         serialize(){
-            let cols = _.filter(this.cols,field=>field.exportable == null || field.exportable);
+            let cols = _.filter(this.vt_fields,field=>field.exportable);
             let rows = _.map(this.rows,row=>{
                 let output = [];
                 _.each(cols,field=>{
@@ -181,7 +280,7 @@ export default {
                 });
                 return output;
             });
-            cols = _.map(cols,field=>this.printHead(field));
+            cols = _.map(cols,field=>field.head);
             return {cols,rows};
         }
     },
@@ -195,7 +294,7 @@ export default {
             return  _.filter(this.rows,(row)=>{
                 let kw = _.toLower(this.keyWord);
                 let found = false;
-                _.each(this.cols,(field)=>{
+                _.each(this.vt_fields,(field)=>{
                     if (_.includes(_.toLower(this.value(field, row, "search")),kw)){
                         found = true;
                         return false;
@@ -204,10 +303,13 @@ export default {
                 return found;
             });
         },
-
         sorted(){
-            let field = this.cols[this.sortFieldIndex];
-            let compareFunc = field.compare || ((a,b)=>{
+            if (!this.sorting){
+                return this.filtered;
+            }
+            let field = this.sorting;
+            let rows = _.clone(this.filtered);
+            let compareFunc =  ((a,b)=>{
                 a = this.value(field, a, "sort") || "";
                 b = this.value(field, b, "sort") || "";
                 if (a < b){
@@ -218,12 +320,27 @@ export default {
                     return 0;
                 }
             });
-
-            let rows = _.clone(this.filtered);
-            rows.sort((a,b)=>this.sortAsc ? compareFunc(a,b) : compareFunc(b,a));
+            rows.sort((a,b)=>field.sorting == 1 ? compareFunc(a,b) : compareFunc(b,a));
             return rows;
+        },
+        vt_fields(){
+            return _.map(this.cols,col=>{
+                let field;
+                if (_.isString(col)){
+                    field = {
+                        name : col
+                    };
+                } else {
+                    field = col;
+                }
+                _.defaults(field,{
+                    head : _.startCase(field.name),
+                    exportable : true,
+                    sortable : true
+                });
+                return field;
+            });
         }
-        
     }
 }
 </script>
@@ -289,8 +406,9 @@ export default {
                 thead{
                     &>tr>th{
                         color: #242a30;
+                        background-color: #fff;
                         font-weight: 600;
-                        border-bottom: 1px solid #b6c2c9!important;
+                        border-bottom: 1px solid #b6c2c9;
                         box-sizing: content-box;
                         vertical-align: bottom;
                         white-space: nowrap;
@@ -300,34 +418,64 @@ export default {
                         -moz-user-select: none; 
                         -ms-user-select: none; 
                         user-select: none;
-                        &.ascending::after {
-                            content: '\f0dd'!important;
-                            opacity: 1!important;
-                        }
-
-                        &.descending::after {
-                            content: '\f0de'!important;
-                            opacity: 1!important;
-                        }
-
-                        &::after{
-                            content: '\f0dc';
-                            position: absolute;
-                            bottom: 0.9em;
-                            display: block;
-                            opacity: 0.3;
-                            right: 0.5em;
-                            font-family: Font Awesome\ 5 Free,Font Awesome\ 5 Pro,FontAwesome!important;
-                            font-weight: 900;
-                            font-style: normal;
-                            font-variant: normal;
-                            text-rendering: auto;
-                        }
+                        cursor: pointer;
+                        position: relative;
 
                         &.sorting {
                             padding-right: 30px;
-                            cursor: pointer;
-                            position: relative;
+                            
+                            &.ascending::after {
+                                content: '\f0dd'!important;
+                                opacity: 1!important;
+                            }
+
+                            &.descending::after {
+                                content: '\f0de'!important;
+                                opacity: 1!important;
+                            }
+
+                            &::after{
+                                content: '\f0dc';
+                                position: absolute;
+                                bottom: 0.9em;
+                                display: block;
+                                opacity: 0.3;
+                                right: 0.5em;
+                                font-family: Font Awesome\ 5 Free,Font Awesome\ 5 Pro,FontAwesome!important;
+                                font-weight: 900;
+                                font-style: normal;
+                                font-variant: normal;
+                                text-rendering: auto;
+                            }
+                        }      
+                        
+                        .dropline {
+                            position: absolute;
+                            height : 100%;
+                            width : 25%;
+                            top : 0px;
+                            &:first-child{
+                                left : 0px;    
+                                &.dragging-over{
+                                    border-left: 2px dashed #348fe2;
+                                }
+                            }
+                            &:last-child{
+                                right : 0px;
+                                &.dragging-over{
+                                    border-right: 2px dashed #348fe2;
+                                }
+                            }
+                            
+                        }
+
+                        &.sticky>.underline {
+                            position : absolute;
+                            bottom : -1px;
+                            width : 100%;
+                            height : 5px;
+                            left : 0px;
+                            background: #348fe2;
                         }
                     }
                 }
@@ -335,12 +483,18 @@ export default {
                 thead>tr>th,tbody>tr>td{
                     border-color: #e2e7eb;
                     padding: 10px 15px;
+                    &.sticky {
+                        position : sticky;
+                        left : 0px;
+                        z-index : 2;
+                    }
                 }
                 tbody>tr>td{
                     -webkit-box-sizing: content-box;
                     box-sizing: content-box;
                     vertical-align: top;
                     border-top: 1px solid #dee2e6;
+                    background-color: #fff;
 
                     .text-muted{
                         color: #b6c2c9!important;

@@ -4,15 +4,15 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --target=lib src/umd.js --name vui --dest dist --report --report-json --formats umd-min",
+    "build": "vue-cli-service build --target=lib src/umd.js --name vui --dest dist --report --report-json --formats umd-min && python deploy.py",
     "build-demo": "vue-cli-service build --dest=demo",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "deploy": "python deploy.py"
   },
   "dependencies": {
     "@johmun/vue-tags-input": "^2.0.1",
     "vee-validate": "^2.2.10",
-    "vue-color": "^2.7.0",
-    "vue2-timepicker": "^0.1.4"
+    "vue-color": "^2.7.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.4.0",

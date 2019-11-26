@@ -15,6 +15,9 @@
             bottom : 41px;
             top : unset;
         }
+        &.checkbox.checkbox-css label::before {
+            background: #aab4bf;
+        }
         .color-picker {
             display: inline-block;
             position: relative;
@@ -47,7 +50,6 @@
                     }
                 }
             }
-
             &.disabled .color-picker-trigger {
                 cursor: unset;
             }
@@ -84,6 +86,14 @@
                 box-shadow: none;
             }
 
+            &.ti-disabled>.ti-input{
+                background: #e5e9ed;
+                opacity: .6;
+                .ti-actions i{
+                    cursor : unset;
+                }
+            }
+
             &.ti-focus>.ti-input{
                 border-color: #5db0ff;
                 outline: 0;
@@ -102,7 +112,7 @@
             }
 
             .select2-selection--multiple .select2-selection__rendered li.select2-selection__choice{
-                background-color: #348fe2!important;
+                background-color: #348fe2;
                 color: #fff;
                 border-radius: 2px;
                 font-size: 12px!important;
@@ -127,12 +137,29 @@
                     box-shadow: 0 0 0 0.125rem rgba(52,142,227,.3);
                 }
             }
+        }
 
-            .input-group-addon {
-                border-top-left-radius: 0px;
-                border-bottom-left-radius: 0px;
+        .input-group {
+            &>*{
+                border-radius : 0px!important;
+                &:not(.invalid-feedback) {
+                    &:first-child {
+                        border-top-left-radius: .25rem !important;
+                        border-bottom-left-radius: .25rem !important;
+                    }
+                    &:nth-last-child(2){
+                        border-top-right-radius: .25rem !important;
+                        border-bottom-right-radius: .25rem !important;
+                    }
+                    &>*{
+                        border-radius: inherit!important;
+                        border-top-left-radius:inherit!important;
+                        border-bottom-left-radius:inherit!important;
+                        border-top-right-radius: inherit!important;
+                        border-bottom-right-radius: inherit!important;
+                    }
+                }
             }
-
         }
 
         &.invalid {
@@ -181,6 +208,9 @@
     import Chrome from "vue-color/src/components/Chrome.vue";
     import VueTagsInput from "@johmun/vue-tags-input";
 
+    // all type of input
+    const components = {};
+
     const base_template =  (t,r="") => `
     <div class="v-input" :class="{'form-group':label, row : inline, 'invalid' : error}">
         <div v-if="label" :class="inline ? 'col-3 d-flex align-items-center' : ''">
@@ -192,6 +222,24 @@
         </div>
         ${r}
     </div>`;
+
+    // general directives
+    const directives = ` v-model="edit" :class="formControlClass" v-validate="validate" v-bind="attrs"`;
+
+     // general template
+    const simple_template = (t) => base_template(`
+        <div v-if="prepend || $scopedSlots.prepend" class="input-group-prepend">
+            <slot name="prepend">
+                <span class="input-group-text">{{prepend}}</span>
+            </slot>
+        </div>
+        ${t}
+        <div v-if="append || $scopedSlots.append" class="input-group-append">
+            <slot name="append">
+                <span class="input-group-text">{{append}}</span>
+            </slot>
+        </div>
+    `);
 
     // base
     const base = {
@@ -205,9 +253,11 @@
             if (this.$parent.$options.name == "VForm"){
                 this.$form = this.$parent;
                 this.$form.$on("reset",this.reset); 
-            } else {
+            }
+            if (!this.$form || this.$form.doneCreated){
                 this.reset();
             }
+            this.id = _.uniqueId(this.$attrs.type);
         },
         beforeDestroy(){
             if (this.$form){
@@ -239,6 +289,9 @@
             input(val,change=true){
                 this.$emit("input",val);
                 if (change){
+                    if (this.$form){
+                        this.$form.dirty = true;
+                    }
                     this.$emit("change",val);
                 }
             }
@@ -247,7 +300,19 @@
             attrs(){
                 let attrs = _.clone(this.$attrs);
                 attrs.disabled = attrs.disabled || attrs.disabled === "" || (this.$form ? this.$form.disabled : false)
+                attrs.required = attrs.required || attrs.required === ""
                 attrs.autocomplete = attrs.autocomplete || "off";
+                let name ;
+                if (attrs.name){
+                    name = attrs.name;
+                } else if(attrs.label){
+                    name = attrs.label;
+                } else if(attrs.placeholder){
+                    name = attrs.placeholder;
+                } else {
+                    name = this.id;
+                }
+                attrs.name = _.snakeCase(name);
                 attrs["data-vv-as"] = attrs["data-vv-as"] ||  _.lowerCase(attrs.name);
                 return attrs;
             },
@@ -302,63 +367,88 @@
         }
     };
 
-    // general directives
-    const directives = ` v-model="edit" :class="formControlClass" v-validate="validate" v-bind="attrs"`;
+    function register(type,fn){
+        components[type] = fn({components,base,base_template,simple_template,directives});
+    }
 
-    // all type of input
-    const components = {};
+
+
+
+    const VInput = {
+        name : "VInput",
+        props : {
+            type : {
+                type : String,
+                default : "search"
+            }    
+        },
+        functional : true,
+        render : (h,context)=>{
+            let attrs = context.data.attrs || {};
+            attrs.type = context.props.type == 'text' ? 'search' : context.props.type;
+            attrs = _.merge({},attrs,{
+                showPlaceholder : attrs.placeholder != null || (attrs.required ? true : false) || attrs.required === "",
+                placeholder : attrs.placeholder ? attrs.placeholder : attrs.label
+            });
+            context.data.attrs = attrs;
+            return h(_.get(components,attrs.type,components.simple),context.data,context.children);
+        },
+        register
+    };
 
     // text area
-    components.textarea = {
+    VInput.register("textarea",({base, base_template, directives})=>({
         extends : base,
-        template : base_template(`<textarea ${directives} ></textarea>`)
-    };
+        template : base_template(`<textarea ${directives}></textarea>`)
+    }));
 
     // check box
     components.checkbox = {
         extends : base,
         methods : {
-            editDefault : () => false,
+            editDefault : () => 0,
+        },
+        computed: {
+            edit : {
+                get(){
+                    return this.editVal;
+                },
+                set(val){
+                    this.input(val ? 1 : 0);
+                }
+            },
         },
         template : `
-        <div class="checkbox checkbox-css" :class = "{'checkbox-inline' : inline}">
-            <input  :id="attrs.name" type="checkbox" ${directives}/>
-            <label :for="attrs.name" class="noselect" :class="{'cursor-pointer': !attrs.disabled}">{{label}}<slot></slot></label>
+        <div class="checkbox checkbox-css v-input" :class = "{'checkbox-inline' : inline, disabled : attrs.disabled}">
+            <input  :id="id" type="checkbox" ${directives}/>
+            <label :for="id" class="noselect" :class="{'cursor-pointer': !attrs.disabled}">{{label}}<slot></slot></label>
         </div>
         `
     };
-
-    // general template
-    const simple_template = (t) => base_template(`
-        <div v-if="prepend" class="input-group-prepend">
-            <span class="input-group-text">{{prepend}}</span>
-        </div>
-        ${t}
-        <div v-if="append" class="input-group-append">
-            <span class="input-group-text">{{append}}</span>
-        </div>
-    `);
 
     // simple input
     components.simple = {
         props : {
             prepend : String,
-            append : String,
-            tag : String
+            append : String
         },
         extends : base,
         computed : {
             inputGroupClass(){
                 let cls = base.computed.inputGroupClass.apply(this);
-                cls["input-group"] = cls["input-group"] || this.prepend || this.append;
+                cls["input-group"] = cls["input-group"] || this.prepend || this.append || this.$scopedSlots.prepend || this.$scopedSlots.append;
                 return cls;
             }
         },
-        template : simple_template(`<input ${directives}></input>`)
+        template : simple_template(`<input ref="input" ${directives}></input>`)
     };
 
     // select 
     components.select = {
+        props : {
+            options : Array,
+            showPlaceholder : Boolean
+        },
         methods : {
             editDefault(){
                 return this.$attrs.multiple != null ? new Array() : "";
@@ -370,8 +460,10 @@
         extends : components.simple,
         template : simple_template(`
         <select ${directives}>
-            <option v-if="attrs.showPlaceholder" value="" disabled>--- {{attrs.placeholder}} ---</option>
-            <slot></slot>
+            <option v-if="showPlaceholder" value="" disabled>--- {{attrs.placeholder}} ---</option>
+            <slot>
+                <option v-for="{value,label} in options" :value="value">{{label}}</option>
+            </slot>
         </select>
         `)
     };
@@ -382,14 +474,16 @@
         props : {
             template : Function,
             templateResult : Function,
-            templateSelection : Function
+            templateSelection : Function,
+            config: Object
         },
         mounted(){
             let config = {
                 width : "100%",
-                allowClear : this.attrs.multiple == null
+                allowClear : this.attrs.multiple == null,
+                ...this.config
             };
-            if (this.attrs.showPlaceholder){
+            if (this.showPlaceholder){
                 config.placeholder = `--- ${this.attrs.placeholder} ---`;
             }
 
@@ -432,21 +526,26 @@
                         this.edit = "";
                     }
                 });
-                this.observer = new MutationObserver(()=>{
-                    this.initSelect2()
-                });
-                this.observer.observe(
-                    this.$refs.select,
-                    {  childList: true,  subtree: true }
-                );
+                if (this.options || _.get(this.config,"ajax")){
+                    this.observer = new MutationObserver(()=>{
+                        this.initSelect2()
+                    });
+                    this.observer.observe(
+                        this.$refs.select,
+                        {  childList: true,  subtree: true }
+                    );
+                }
             }
             this.initSelect2();
         },
         beforeDestroy(){
             this.cleanup = true;
             $(this.$refs.select).off().select2("destroy");
-            this.observer.disconnect();
-            this.observer = null;
+            if (this.observer){
+                this.observer.disconnect();
+                this.observer = null;
+            }
+
         },
         watch: {
             edit(value) {
@@ -457,7 +556,9 @@
         },
         template : simple_template(`
         <select  ${directives} ref="select">
-            <slot></slot>
+            <slot>
+                <option v-for="{value,label} in options" :value="value">{{label}}</option>
+            </slot>
         </select>
         `)
     };
@@ -466,7 +567,6 @@
         extends : base,
         props : {
             type : String,
-            readonly : Boolean,
             option : Object,
             format : {
                 type : String,
@@ -517,6 +617,33 @@
                 <i class="far fa-calendar-alt cursor-pointer"></i>
             </div>
         `,`<input v-model="edit" v-bind="attrs" v-validate="validate" class="d-none">`)
+    };
+
+    components["time-range"] = {
+        extends : base,
+        props : {
+            default : {
+                type : Array,
+                default :()=>["",""]
+            }    
+        },
+        computed : {
+            inputGroupClass(){
+                let cls = base.computed.inputGroupClass.apply(this);
+                cls["input-group"] = true;
+                return cls;
+            }
+        },
+        methods : {
+            editDefault(){return this.default},
+            checkValue : (val)=>_.isArray(val)
+        },
+
+        template : base_template(`
+            <input class="text-center" ref="startdate" type="time" :class="formControlClass" v-validate="validate" placeholder="Start Time" :value="edit[0]" @input="e=>edit=[e.srcElement.value,edit[1]]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="start time">
+            <div class="input-group-addon rounded-0">to</div>
+            <input class="text-center rounded-right" ref="enddate" type="time" :class="formControlClass" v-validate="validate" placeholder="End Time" :value="edit[1]" @input="e=>edit=[edit[0],e.srcElement.value]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="end time">
+        `)
     };
 
     const daterange = {
@@ -572,33 +699,6 @@
             <div class="input-group-addon">to</div>
             <input ref="enddate" type="text" :class="formControlClass" class="rounded-right" placeholder="End Date" readonly :value="edit[1]" :disabled="attrs.disabled">
         `,`<input v-model="edit[0] ? edit[1] : edit[0]"  v-validate="validate" :data-vv-as="edit[0] ? 'end date' : 'start date'" class="d-none" v-bind="attrs">`)
-    };
-
-    components["time-range"] = {
-        extends : base,
-        props : {
-            default : {
-                type : Array,
-                default :()=>["",""]
-            }    
-        },
-        computed : {
-            inputGroupClass(){
-                let cls = base.computed.inputGroupClass.apply(this);
-                cls["input-group"] = true;
-                return cls;
-            }
-        },
-        methods : {
-            editDefault(){return this.default},
-            checkValue : (val)=>_.isArray(val)
-        },
-
-        template : base_template(`
-            <input class="text-center" ref="startdate" type="time" :class="formControlClass" v-validate="validate" placeholder="Start Time" :value="edit[0]" @input="e=>edit=[e.srcElement.value,edit[1]]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="start time">
-            <div class="input-group-addon rounded-0">to</div>
-            <input class="text-center rounded-right" ref="enddate" type="time" :class="formControlClass" v-validate="validate" placeholder="End Time" :value="edit[1]" @input="e=>edit=[edit[0],e.srcElement.value]" :disabled="attrs.disabled" :name="attrs.name" :required="attrs.required" data-vv-as="end time">
-        `)
     };
 
     components["date-range"] = {
@@ -778,42 +878,5 @@
             </div>
         `)
     };
-
-
-    export default {
-        name : "VInput",
-        props : {
-            type : {
-                type : String,
-                default : "text"
-            }    
-        },
-        functional : true,
-        render : (h,context)=>{
-            let attrs = context.data.attrs || {};
-            attrs.type = context.props.type;
-            attrs = _.merge({},attrs,{
-                showPlaceholder : attrs.placeholder != null || attrs.required || attrs.required === "",
-                placeholder : attrs.placeholder ? attrs.placeholder : attrs.label,
-                name : ((a)=>{
-                    let name;
-                    if (a.name){
-                        name = a.name;
-                    } else if(a.label){
-                        name = a.label;
-                    } else if(a.placeholder){
-                        name = a.placeholder;
-                    } else {
-                        name = _.uniqueId(a.type);
-                    }
-                    return _.snakeCase(name);
-                })(attrs),
-                required : attrs.required || attrs.required === "",
-                readonly : attrs.readonly || attrs.readonly === ""
-            });
-            let type = context.props.type;
-            context.data.attrs = attrs;
-            return h(_.get(components,type,components.simple),context.data,context.children);
-        }
-    };
+    export default VInput;
 </script>

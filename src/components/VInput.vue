@@ -252,11 +252,14 @@
         },
         beforeCreate(){
             this.id = _.uniqueId(this.$attrs.type);
-        },
-        created(){
             if (this.$parent.$options.name == "VForm"){
                 this.$form = this.$parent;
+            }
+        },
+        created(){
+            if (this.$form){
                 this.$form.$on("reset",this.reset); 
+                this.$form.$on("disable",this.disable);
             }
             if (!this.$form || this.$form.doneCreated){
                 this.reset();
@@ -265,6 +268,7 @@
         beforeDestroy(){
             if (this.$form){
                 this.$form.$off("reset",this.reset);
+                this.$form.$off("disable",this.disable);
             }
         },
         props : {
@@ -297,6 +301,12 @@
                     }
                     this.$emit("change",val);
                 }
+            },
+            disable(val){
+                this.attrs.disabled = this.$attrs.disabled || this.$attrs.disabled === "" || val
+            },
+            modifyAttrs(){
+
             }
         },
         computed : {
@@ -370,6 +380,7 @@
                     }
                     attrs.name = _.snakeCase(name);
                     attrs["data-vv-as"] = attrs["data-vv-as"] ||  _.lowerCase(attrs.name);
+                    this.modifyAttrs(attrs);
                     this.attrs = attrs;
                 },
                 immediate : true

@@ -1,21 +1,6 @@
 <template>
-    <div id="app" v-if="1">
-        <v-form submit-btn ref="f" :disabled="formDisabled">
-            <template #default = "{edit}">
-                <div v-collapse="collapse">
-                    <code>{{JSON.stringify(edit)}}</code>
-                    
-                    <v-input label="text" type="test" required v-model="edit.text">
-                        <template #append>
-                            <button class="btn btn-primary">123</button>
-                        </template>
-                    </v-input>
-                    <v-input label="textarea"  type="test" required v-model="edit.detail"></v-input>
-                </div>
-            </template>
-        </v-form>
-    </div>
-    <div id="app" v-else>
+
+    <div id="app">
         <h1 id="input">Input</h1>
         <div class="panel panel-inverse">
             <div class="panel-heading">

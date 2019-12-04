@@ -10,6 +10,7 @@
     "deploy": "python deploy.py"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "https://github.com/cristianizzo/ckeditor5-build-classic",
     "@johmun/vue-tags-input": "^2.0.1",
     "vee-validate": "^2.2.10",
     "vue-color": "^2.7.0"

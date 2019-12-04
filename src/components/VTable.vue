@@ -77,7 +77,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="row in page" :key="row.id">
+                        <tr v-for="(row,idx) in page" :key="idx">
                             <td 
                                 :key="field.name" 
                                 :class="css(field,row)"  

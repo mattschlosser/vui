@@ -36,6 +36,9 @@
         watch : {
             object : function(){
                 this.reset();
+            },
+            disabled(val){
+                this.$emit("disable",val);
             }
         },
         props : {

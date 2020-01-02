@@ -1,19 +1,24 @@
 <template>
     <div>
         <slot :page="page" :index="pageIndex"></slot>
-        <div class="v-pagination">
-            <ul class="pagination">
-                <li class="page-item" :class="{disabled : pageIndex==0}">
-                    <a href="javascript:;" tabindex="0" class="page-link"  @click="pageIndex -= 1">Previous</a>
-                </li>
-                <li class="page-item" v-for="(status,index) in pageStatus" :key="index" :class="{active : index == pageIndex,disabled : status=='disable'}" >
-                    <a v-if="status=='active'" href="javascript:;" tabindex="0" class="page-link" @click="pageIndex = index">{{index + 1}}</a>
-                    <a v-else-if="status=='disable'" href="javascript:;" tabindex="0" class="page-link">...</a>
-                </li>
-                <li class="page-item" :class="{disabled : pageIndex==pages.length - 1}" >
-                    <a href="javascript:;" tabindex="0" class="page-link" @click="pageIndex += 1">Next</a>
-                </li>
-            </ul>
+        <div class="d-flex vt-footer">
+            <div class="vt-info" role="status" aria-live="polite">
+                {{info(pageIndex)}}
+            </div>
+            <div class="v-pagination">
+                <ul class="pagination">
+                    <li class="page-item" :class="{disabled : pageIndex==0}">
+                        <a href="javascript:;" tabindex="0" class="page-link"  @click="pageIndex -= 1">Previous</a>
+                    </li>
+                    <li class="page-item" v-for="(status,index) in pageStatus" :key="index" :class="{active : index == pageIndex,disabled : status=='disable'}" >
+                        <a v-if="status=='active'" href="javascript:;" tabindex="0" class="page-link" @click="pageIndex = index">{{index + 1}}</a>
+                        <a v-else-if="status=='disable'" href="javascript:;" tabindex="0" class="page-link">...</a>
+                    </li>
+                    <li class="page-item" :class="{disabled : pageIndex==pages.length - 1}" >
+                        <a href="javascript:;" tabindex="0" class="page-link" @click="pageIndex += 1">Next</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
@@ -35,6 +40,10 @@ export default {
         "itemPerPage" : {
             type : Number,
             required : true
+        },
+        "info" : {
+            type: Function,
+            required: true
         }
     },
 
@@ -88,6 +97,16 @@ export default {
 </script>
 
 <style>
+
+    .vt-info {
+        margin-right: auto;
+    }
+    .vt-footer {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
     div.v-pagination>ul.pagination>li.page-item {
         -webkit-touch-callout: none; 
         -webkit-user-select: none; 

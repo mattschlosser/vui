@@ -3,11 +3,12 @@
     <v-pagination
         :items ="sorted"
         :item-per-page="ipg"
+        :info="info"
         class="container-fluid v-table"
         ref="pagination"
         @updated="updateStickPos"
     >
-        <template slot-scope="{ page,index }">
+        <template slot-scope="{ page }">
             <div class="vt-buttons">
                 <slot name="buttons"></slot>
             </div>
@@ -101,9 +102,6 @@
                 </table>
             </div>
 
-            <div class="vt-info" role="status" aria-live="polite">
-                {{info(index)}}
-            </div>
         </template>
     </v-pagination>
 </template>
@@ -369,9 +367,12 @@ export default {
             white-space: nowrap;
         }
 
-        div.vt-buttons, div.vt-length, div.vt-info {
+        div.vt-buttons, div.vt-length {
             float: left;
             margin-right: 15px;
+        }
+        
+        div.vt-buttons, div.vt-length, div.vt-info {
             label {
                 font-weight: normal;
                 text-align: left;
@@ -381,7 +382,6 @@ export default {
         }
 
         div.v-pagination {
-            margin: 0;
             white-space: nowrap;
             text-align: right;
             ul.pagination {
